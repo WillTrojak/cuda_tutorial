@@ -10,7 +10,7 @@ void error_check(cudaError_t cerr, int id) {
 }
 
 
-__global__ void vectorAdd(int n, const float *a, const float *b, float *c) {
+__global__ void vector_add(int n, const float *a, const float *b, float *c) {
     // -> Element indexing
 
     // -> C = A + B

@@ -10,7 +10,7 @@ void error_check(cudaError_t cerr, int id) {
 }
 
 
-__global__ void vectorAdd(int n, const float *a, const float *b, float *c) {
+__global__ void vector_add(int n, const float *a, const float *b, float *c) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (i < n) {
@@ -63,7 +63,7 @@ int main(void) {
            blocks_per_grid);
 
     // Launch the Vector Add Kernel
-    vectorAdd<<<blocks_per_grid, threads_per_block>>>(n, a_d, b_d, c_d);
+    vector_add<<<blocks_per_grid, threads_per_block>>>(n, a_d, b_d, c_d);
 
     // Copy result to host
     cerr = cudaMemcpy(c_h, c_d, size, cudaMemcpyDeviceToHost);
