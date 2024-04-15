@@ -1,5 +1,11 @@
 # cuBLAS - legendre polynomials
 
+This exercise will evaluate a large number of Legendre polynomials at a set of
+points. TO do this we can build a matrix and then use cuBLAS (CUDA basic linear
+algebra subprograms). We'll be using the level 3 function (matrix-matrix
+functions). You can find the docmentation of blas
+[here](https://docs.nvidia.com/cuda/cublas/).
+
 ## Exercise 0
 * Implement the recurance relation for legendre polynomials. (See wikipedia)
 * Create a cublas handle and set which stream it uses.

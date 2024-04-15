@@ -1,7 +1,8 @@
 # Device functions - approximating Gauss--Legendre points
 
 In this exercise we'll approximate the possition of Gauss--Legendre quadrature
-points. For this it will be useful to use device functions.
+points. For this it will be useful to use device functions, ie a function on the
+device called from on the device.
 
 ## Exercise 0
 * Start by implementing the function `bessel0_root`. This can be found in the
