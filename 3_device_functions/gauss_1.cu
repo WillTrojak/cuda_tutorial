@@ -4,10 +4,12 @@
 
 typedef double ftype;
 
-// -> Update proto-types
-ftype tricomi_approx(int n, int k);
-ftype olver_approx(int n, int k);
-ftype bessel0_root(const int k);
+// Approximation parameters from JCP 42, pp. 403-405 (1981)
+// -> Add device constants for the parameters used in bessel0_root
+
+__device__ ftype tricomi_approx(const int n, const int k);
+__device__ ftype olver_approx(const int n, const int k);
+__device__ ftype bessel0_root(const int k);
 
 
 void error_check(cudaError_t cerr, int id) {
@@ -17,7 +19,8 @@ void error_check(cudaError_t cerr, int id) {
     }
 }
 
-__global__ void invert_theta(int n, const ftype *theta, ftype *x) {
+
+__global__ void invert_theta(const int n, const ftype *theta, ftype *x) {
     int k = blockDim.x*blockIdx.x + threadIdx.x;
     int n2 = floor(n*0.5);
 
@@ -28,7 +31,7 @@ __global__ void invert_theta(int n, const ftype *theta, ftype *x) {
     }
 }
 
-__global__ void calculate_theta(int n, ftype *theta) {
+__global__ void calculate_theta(const int n, ftype *theta) {
     int k = blockDim.x*blockIdx.x + threadIdx.x;
     int n2 = floor(n*0.5);
 
@@ -41,42 +44,38 @@ __global__ void calculate_theta(int n, ftype *theta) {
 
 }
 
-// -> Update proto-types
-ftype tricomi_approx(int n, int k) { // best for |x| < 0.5
-    const ftype pi = 3.141592653589793;
-
+__device__ ftype tricomi_approx(const int n, const int k) { // best for |x| < 0.5
     ftype phi = (k - 0.25)*pi / (n + 0.5);
 
     ftype x_k = 39 - 28/(pow(sin(phi), 2));
-    x_k = -x_k / (384*pow(n, 4));
-    x_k -= (n - 1.) / (8*pow(n, 3));
+    x_k /= -(384 * pow(n, 4));
+    x_k -= (n - 1.) / (8 * pow(n, 3));
     x_k += 1;
-    x_k = x_k * cos(phi);
+    x_k *= cos(phi);
 
     return x_k;
 }
 
-// -> Update proto-types
-ftype olver_approx(int n, int k) { // best for 0.5 <= |x| <=1
+__device__ ftype olver_approx(const int n, const int k) { // best for 0.5 <= |x| <=1
     ftype nph = n + 0.5;
     ftype psi = bessel0_root(k) / nph;
 
     ftype x_k = psi / tan(psi) - 1;
-    x_k = x_k / (8 * psi * nph * nph);
+    x_k /= (8 * psi * nph * nph);
     x_k += psi;
     x_k = cos(x_k);
 
     return x_k;
 }
 
-// -> Implement approximate bessel_0 root function
-// https://doi.org/10.1016/0021-9991(81)90253-9
-// Hints:
-// pi = 3.141592653589793
-// beta = (k - 0.25) * pi;
-ftype bessel0_root(int k) {
+__device__ ftype bessel0_root(const int k) {
+    ftype beta = (k - 0.25) * pi;
 
-    return
+    ftype j0 = a0 + a1*powf(beta, 2) + a2*powf(beta, 4) + a3*powf(beta, 6);
+    j0 /= (beta*(b0 + b1*powf(beta, 2) + b2*powf(beta, 4) + b3*powf(beta, 6)));
+    j0 += beta;
+
+    return j0;
 }
 
 int main(void) {
@@ -97,7 +96,8 @@ int main(void) {
     error_check(cerr, 1);
 
     // Create the stream
-    // -> Declare and create a stream
+    cudaStream_t stream;
+    cerr = cudaStreamCreate(&stream);
     error_check(cerr, 2);
 
     // Calculate the thread size
@@ -109,8 +109,8 @@ int main(void) {
            blocks_per_grid);
 
     // Launch the CUDA Kernels
-    // -> call calculate_theta
-    // -> call invert_theta
+    calculate_theta<<<blocks_per_grid, threads_per_block, 0, stream>>>(n, theta_d);
+    invert_theta<<<blocks_per_grid, threads_per_block, 0, stream>>>(n, theta_d, x_d);
 
     // Copy result to host
     cerr = cudaMemcpy(theta_h, theta_d, size, cudaMemcpyDeviceToHost);
