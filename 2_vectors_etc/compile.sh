@@ -1,5 +1,5 @@
 compute_capability=70
-file="shared_0.cu"
+file="attention_solution_1.cu"
 exec="go"
 
 rm -f ${exec}

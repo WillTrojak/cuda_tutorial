@@ -1,5 +1,5 @@
 compute_capability=70
-file="shared_0.cu"
+file="gauss_0.cu"
 exec="go"
 
 rm -f ${exec}
