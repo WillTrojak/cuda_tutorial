@@ -62,7 +62,7 @@ int main(void) {
            blocks_per_grid);
 
     // Launch the Vector Add Kernel
-    vectorAdd<<<blocks_per_grid, threads_per_block>>>(n, a_d, b_d, c_d);
+    vector_add<<<blocks_per_grid, threads_per_block>>>(n, a_d, b_d, c_d);
 
     // Copy result to host
     // -> Add device to host copy
